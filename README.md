@@ -1,7 +1,11 @@
 # Mars
 > **WARNING: This is not for regular users**
 
-A super lightweight clone of api.papermc.io
+A super lightweight clone of [api.papermc.io](https://api.papermc.io)
+
+Lightweight does not mean incomplete functionality. On the contrary, Mars has fully implemented all the APIs of bibliothek and further optimized them.
+
+Mars is 1:1 compatible with the bibliothek API (except for database construction and private APIs). You can seamlessly switch to Mars。
 
 [👉Download](https://github.com/LevelTranic/Mars/releases)
 
