@@ -11,6 +11,51 @@ Mars is 1:1 compatible with the bibliothek API (except for database construction
 
 [👉Wiki](https://github.com/LevelTranic/Mars/wiki)
 
+## Build
+> Build scripts are only useful if cross-platform builds are required.
+> 
+> To use the build script, you must install the Zig toolchain and PowerShell 7.
+
+Prerequisites for building Mars:
+- GCC or clang
+- ZigCC (Replacement for gcc and clang, included in the zig toolchain)
+- Golang 1.24.3
+- PowerShell 7 (No installation required if you don't use the build script)
+
+### Manual build
+
+@Bash
+```shell
+export CGO_ENABLED=1
+go mod tidy
+go build -ldflags "-s -w"
+```
+
+@CMD
+```shell
+set CGO_ENABLED=1
+go mod tidy
+go build -ldflags "-s -w"
+```
+
+@PowerShell
+```shell
+$env:CGO_ENABLED=1
+go mod tidy
+go build -ldflags "-s -w"
+```
+
+### Using build scripts
+> Note that the Mars build script requires PowerShell 7 and the Zig toolchain to be installed.
+>
+> The build script is suitable for cross-compilation.
+> 
+> The first build will be slow, please be patient.
+
+```shell
+./build.ps1
+```
+
 ## Scan Report
 Due to the large number of build products, only reports for the latest versions of amd64 v1 and arm64 are provided.
 

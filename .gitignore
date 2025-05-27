@@ -1,0 +1,10 @@
+api.mdb
+Mars
+*.exe
+*.xz
+*.zip
+.idea
+.idea/*
+./storage
+temp/*
+storage

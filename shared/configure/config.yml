@@ -1,0 +1,100 @@
+# Don't modify this item
+config_version: 1.4.0
+auth_token: WlVReVcySkRNRUJoVERrbFlrZzBLbUZJTTBCb1FqQmVZMFV3Sm1OS01WNWhRak4r
+# Active GC runs after calling /v2/new/downloads && /v2/new/external_download and may take up double the space if not enabled.
+# Active GC will cause the process to be briefly suspended and may cause some unknown consequences.
+# default: true
+active_gc: true
+# All_recycled needs to enable Active_GC. After opening, after calling all download API (Private),
+# a three -wheeled GC will be forced to recover all memory.
+# May affect operating efficiency.
+all_recycled: false
+# When using the `External Download API (Private)`,
+# an attempt will be made to actively sniff filenames and hashes.
+# default: false
+active_sniffing: false
+json:
+  # JSON runtime selection, default is sonic (amd64 only).
+  # Supported JSON runtimes: std2, sonic, sonnet, segmentio, gojson
+  runtime: sonic
+  # Sonic only supports amd64 environment and requires the CPU to support at least AVX2.
+  sonic:
+    # SONIC will process json in the fastest configuration. (not including JITPretouch)
+    fast_mode: true
+    # Preheating JSON JIT may be able to effectively improve JSON processing performance.
+    jit_pretouch: false
+server:
+  # Kind of network listener (default: tcp) The network must be "tcp", "tcp4", "tcp6".
+  # If you need to monitor both v4 and v6, select tcp.
+  listen_mode: tcp
+  # The listening address.
+  # If you want the service to be inaccessible to the outside world,
+  # set it to 127.0.0.1 (or localhost), otherwise leave it blank.
+  listen_address: 127.0.0.1
+  # Listen Port
+  listen_port: 7743
+  tls_in_cert:
+  tls_in_key:
+  # The size of the body carried by the maximum request.
+  # If it is smaller than the file size, the file may fail to be uploaded.
+  # (default: 120 (MB))
+  max_request_body_size: 120
+  # Set the max body size for bodies to be returned to the pool.
+  # If the body size is larger it will be released instead of put back into the pool for reuse.
+  # (default: req: 50 (MB); resp: 50 (MB))
+  req_body_size: 50
+  resp_body_size: 50
+redis:
+  enabled: false
+  # Optional drives: classic, modern
+  driver: classic
+  # If you use the classic driver, only one server can be online at a time.
+  servers:
+    - 127.0.0.1:6379
+  # If you use the modern driver and set a username or password,
+  # the username and password for all redis must be the same.
+  username:
+  password:
+database:
+  # Database Driver
+  # Support: sqlite, mysql
+  driver: sqlite
+  # Global Database Config
+  global:
+    # MaxIdleConns sets the maximum number of connections in the idle connection pool.
+    # If MaxOpenConns is greater than 0 but less than the new MaxIdleConns, then the new
+    # MaxIdleConns will be reduced to match the MaxOpenConns limit.
+    # If n <= 0, no idle connections are retained.
+    # The default max idle connections is currently 2. This may change in a future release.
+    max_idle_conns: 2
+    # ConnMaxLifetime sets the maximum amount of time a connection may be reused.
+    # Expired connections may be closed lazily before reuse.
+    # If d <= 0, connections are not closed due to a connection's age.
+    # . The default is 60 (seconds)
+    conn_max_lifetime: 60
+    # MaxOpenConns sets the maximum number of open connections to the database.
+    # If MaxIdleConns is greater than 0 and the new MaxOpenConns is less than MaxIdleConns,
+    # then MaxIdleConns will be reduced to match the new MaxOpenConns limit.
+    # If n <= 0, then there is no limit on the number of open connections. The default is 0 (unlimited).
+    max_open_conns: 0
+    # ConnMaxIdleTime sets the maximum amount of time a connection may be idle.
+    # Expired connections may be closed lazily before reuse.
+    # If d <= 0, connections are not closed due to a connection's idle time.
+    # The default is 15 (second)
+    conn_max_idle_time: 15
+  sqlite:
+    name: api.mdb
+  mysql:
+    user: tranic_mars
+    pass: tranic_mars
+    addr: 127.0.0.1:3306
+    dbname: tranicMars
+    charset: utf8mb4
+    # disable datetime precision, which not supported before MySQL 5.6
+    disable_datetime_precision: true
+    # drop & create when rename index, rename index not supported before MySQL 5.7, MariaDB
+    dont_support_rename_index: true
+    # `change` when rename column, rename column not supported before MySQL 8, MariaDB
+    dont_support_rename_column: true
+    # auto configure based on currently MySQL version
+    skip_initialize_with_version: false
