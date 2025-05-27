@@ -73,4 +73,4 @@ Linux: The toolchain is broken and no binaries can be provided for it.
 
 ## Contact Us
 
-Discord: https://discord.gg/dBbSbv2Vuz
+Discord: https://discord.gg/PxgFqNmR2h
