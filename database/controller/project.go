@@ -1,12 +1,15 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"gorm.io/gorm"
+
 	"Mars/database/schemas"
 	"Mars/database/shared"
 	"Mars/shared/utils"
-	"fmt"
-	"gorm.io/gorm"
-	"strings"
 )
 
 func newProject(projectName string) *gorm.DB {
@@ -20,7 +23,7 @@ func newProject(projectName string) *gorm.DB {
 
 func CreateProject(projectName string) (bool, error) {
 	if !utils.IsValidProjectName(projectName) {
-		return false, fmt.Errorf("invalid project name: failed string mandatory validation")
+		return false, errors.New("invalid project name: failed string mandatory validation")
 	}
 
 	var project schemas.Project
@@ -40,7 +43,7 @@ func CreateProject(projectName string) (bool, error) {
 // FindProjectByID finds a Project by its id
 func FindProjectByID(id string) (schemas.Project, error) {
 	if !utils.IsValidProjectName(id) {
-		return schemas.Project{}, fmt.Errorf("invalid project id: failed string mandatory validation")
+		return schemas.Project{}, errors.New("invalid project id: failed string mandatory validation")
 	}
 	var project schemas.Project
 	result := shared.DB.Where("id = ?", id).First(&project)

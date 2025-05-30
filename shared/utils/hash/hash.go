@@ -3,25 +3,15 @@ package hash
 import (
 	"errors"
 	"fmt"
-	"io"
 	"mime"
 
+	fshash "github.com/3JoB/ulib/fsutil/hash"
 	"github.com/3JoB/unsafeConvert"
-	"github.com/minio/sha256-simd"
 
 	"Mars/lib/http"
 	"Mars/shared/utils"
 	"Mars/shared/utils/json"
 )
-
-func FileHash(r io.Reader) (string, error) {
-	h := sha256.New()
-	defer h.Reset()
-	if _, err := io.Copy(h, r); err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
-}
 
 func GetFilenameAndHash(addr string, isRedirect bool) (string, string, error) {
 	defer utils.GC()
@@ -50,11 +40,7 @@ func GetFilenameAndHash(addr string, isRedirect bool) (string, string, error) {
 	if filename == "" {
 		return "", "", errors.New("content-disposition is empty")
 	}
-	hash, err := FileHash(resp.BodyStream())
-	if err != nil {
-		return "", "", err
-	}
-	return filename, hash, nil
+	return filename, fshash.NewReader(resp.BodyStream(), &fshash.Opt{Crypt: fshash.SHA256}), nil
 }
 
 func peekHeaderFilename(d []byte) string {

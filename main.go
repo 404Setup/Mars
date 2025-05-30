@@ -1,13 +1,14 @@
 package main
 
 import (
+	"log/slog"
+
 	"Mars/database"
 	"Mars/database/controller"
 	"Mars/server"
 	"Mars/shared/configure"
 	"Mars/shared/utils/json"
 	"Mars/shared/utils/json/json_se/sonic"
-	"log/slog"
 )
 
 func main() {

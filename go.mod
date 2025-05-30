@@ -3,7 +3,7 @@ module Mars
 go 1.24.3
 
 require (
-	github.com/3JoB/ulib v1.44.0
+	github.com/3JoB/ulib v1.45.0
 	github.com/3JoB/unsafeConvert v1.6.0
 	github.com/bytedance/sonic v1.13.2
 	github.com/gabriel-vasile/mimetype v1.4.9
@@ -13,8 +13,7 @@ require (
 	github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc
 	github.com/klauspost/cpuid/v2 v2.2.10
 	github.com/mattn/go-ieproxy v0.0.12
-	github.com/minio/sha256-simd v1.0.1
-	github.com/redis/go-redis/v9 v9.8.0
+	github.com/redis/go-redis/v9 v9.9.0
 	github.com/redis/rueidis v1.0.60
 	github.com/savsgio/atreugo/v11 v11.13.2
 	github.com/segmentio/encoding v0.4.1

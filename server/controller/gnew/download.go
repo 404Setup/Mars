@@ -1,6 +1,7 @@
 package gnew
 
 import (
+	"errors"
 	"io"
 	"mime/multipart"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/3JoB/ulib/fsutil"
+	fshash "github.com/3JoB/ulib/fsutil/hash"
 	"github.com/3JoB/unsafeConvert"
 	"github.com/savsgio/atreugo/v11"
 	"gorm.io/gorm"
@@ -17,7 +19,6 @@ import (
 	"Mars/server/schemas"
 	"Mars/shared/configure"
 	schemas2 "Mars/shared/schemas"
-	"Mars/shared/utils/hash"
 )
 
 func Download(c *atreugo.RequestCtx) error {
@@ -118,27 +119,22 @@ func buildDownload(file *multipart.FileHeader, path, id string, budDL map[string
 		return err
 	}
 	defer f.Close()
-	hash, err := hash.FileHash(f)
-	if err != nil {
-		return err
+	fileHash := fshash.NewReader(f, &fshash.Opt{Crypt: fshash.SHA256})
+	if fileHash == "" {
+		return errors.New("file hash is empty")
 	}
 
 	if len(budDL) != 0 {
 		o, ok := budDL[id]
-		if ok && o.Sha256 == hash {
+		if ok && o.Sha256 == fileHash {
 			return nil
 		}
 
 		for _, version := range budDL {
-			if version.Sha256 == hash {
+			if version.Sha256 == fileHash {
 				return nil
 			}
 		}
-	}
-
-	// Reset the file pointer to the beginning
-	if _, err = f.Seek(0, io.SeekStart); err != nil {
-		return err
 	}
 
 	filePath := filepath.Join(path, file.Filename)
@@ -158,7 +154,7 @@ func buildDownload(file *multipart.FileHeader, path, id string, budDL map[string
 
 	budDL[id] = schemas2.ApplicationVersionsSchema{
 		Name:   file.Filename,
-		Sha256: hash,
+		Sha256: fileHash,
 	}
 
 	return nil

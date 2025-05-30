@@ -1,12 +1,14 @@
 package gnew
 
 import (
+	"crypto/md5"
 	"errors"
 	"net/url"
 	"time"
 
-	"github.com/3JoB/ulib/hash/hmac"
+	hash2 "github.com/3JoB/ulib/hash"
 	"github.com/3JoB/ulib/litefmt"
+	"github.com/3JoB/unsafeConvert"
 	"github.com/savsgio/atreugo/v11"
 	"gorm.io/gorm"
 
@@ -65,6 +67,10 @@ func ExternalDownload(c *atreugo.RequestCtx) error {
 					e = errors.New(litefmt.Sprint(">> ", err.Error()))
 					break
 				}
+				if hashe == "" {
+					e = errors.New(litefmt.Sprint(">> ", "Cannot calculate hash in streams on ", b.Url))
+					break
+				}
 				r := schemas2.ApplicationVersionsSchema{
 					Name:   name,
 					Sha256: hashe,
@@ -107,8 +113,9 @@ func buildDownloadUrl(id string, d schemas2.ApplicationVersionsSchema, b map[str
 		}
 		return
 	}
+
 	b[id] = schemas2.ApplicationVersionsSchema{
-		Name:   uuid.GenerateUUIDv9(hmac.MD5S(d.Url, time.Now().String()).Hex()).String(),
+		Name:   uuid.GenerateUUIDv9(hash2.CreateHMAC(unsafeConvert.BytePointer(d.Url), unsafeConvert.BytePointer(time.Now().String()), md5.New).Hex()).String(),
 		Sha256: "",
 		Url:    d.Url,
 	}
