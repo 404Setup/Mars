@@ -1,23 +1,21 @@
 package gnew
 
 import (
+	"Mars/shared/utils"
 	"errors"
-	"io"
-	"mime/multipart"
-	"os"
-	"path/filepath"
-	"runtime"
-
 	"github.com/3JoB/ulib/fsutil"
 	fshash "github.com/3JoB/ulib/fsutil/hash"
 	"github.com/3JoB/unsafeConvert"
 	"github.com/savsgio/atreugo/v11"
 	"gorm.io/gorm"
+	"io"
+	"mime/multipart"
+	"os"
+	"path/filepath"
 
 	"Mars/database/controller"
 	"Mars/server/helper"
 	"Mars/server/schemas"
-	"Mars/shared/configure"
 	schemas2 "Mars/shared/schemas"
 )
 
@@ -75,15 +73,7 @@ func Download(c *atreugo.RequestCtx) error {
 		budDL = map[string]schemas2.ApplicationVersionsSchema{}
 	}
 
-	if configure.Get().ActiveGC {
-		defer func() {
-			runtime.GC()
-			if configure.Get().AllRecycled {
-				runtime.GC()
-				runtime.GC()
-			}
-		}()
-	}
+	defer utils.GC()
 
 	mf, err := c.MultipartForm()
 	if err != nil {
