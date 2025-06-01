@@ -44,7 +44,7 @@ func Server() {
 		},
 		ErrorView: func(c *atreugo.RequestCtx, err error, i int) {
 			c.Response.SetStatusCode(i)
-			_ = c.JSONResponse(schemas.NewError(err.Error()))
+			_ = c.JSONResponse(schemas.NewErrors(err))
 		},
 		Name: "Tranic Mars",
 	}

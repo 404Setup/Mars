@@ -30,5 +30,5 @@ func Project(c *atreugo.RequestCtx) error {
 	if yes {
 		return c.JSONResponse(schemas.NewResult("done"), 200)
 	}
-	return c.JSONResponse(schemas.NewErrorWithRaw(info), 400)
+	return c.JSONResponse(schemas.NewErrors(info), 400)
 }

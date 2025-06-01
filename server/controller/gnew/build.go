@@ -24,7 +24,7 @@ func Build(c *atreugo.RequestCtx) error {
 	}
 
 	if i, err := controller.CreateBuild(jar); err != nil {
-		return c.JSONResponse(schemas.NewError(err.Error()), 400)
+		return c.JSONResponse(schemas.NewErrors(err), 400)
 	} else {
 		return c.JSONResponse(&schemas.NewBuildResult{
 			Project: jar.Project,

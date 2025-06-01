@@ -59,5 +59,8 @@ func (b *Build) MarshalDownloads(downloads map[string]schemas.ApplicationVersion
 func (b *Build) UnmarshalDownloads() map[string]schemas.ApplicationVersionsSchema {
 	var downloads map[string]schemas.ApplicationVersionsSchema
 	_ = json.JSON.Unmarshal(b.Downloads, &downloads)
+	if downloads == nil {
+		downloads = map[string]schemas.ApplicationVersionsSchema{}
+	}
 	return downloads
 }

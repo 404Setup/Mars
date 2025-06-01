@@ -1,22 +1,23 @@
 package gnew
 
 import (
-	"Mars/shared/utils"
 	"errors"
-	"github.com/3JoB/ulib/fsutil"
-	fshash "github.com/3JoB/ulib/fsutil/hash"
-	"github.com/3JoB/unsafeConvert"
-	"github.com/savsgio/atreugo/v11"
-	"gorm.io/gorm"
 	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 
+	"github.com/3JoB/ulib/fsutil"
+	fshash "github.com/3JoB/ulib/fsutil/hash"
+	"github.com/3JoB/unsafeConvert"
+	"github.com/savsgio/atreugo/v11"
+	"gorm.io/gorm"
+
 	"Mars/database/controller"
 	"Mars/server/helper"
 	"Mars/server/schemas"
 	schemas2 "Mars/shared/schemas"
+	"Mars/shared/utils"
 )
 
 func Download(c *atreugo.RequestCtx) error {
@@ -25,6 +26,7 @@ func Download(c *atreugo.RequestCtx) error {
 			_ = helper.HandleInternalError(c, p)
 			return
 		}
+		utils.GC()
 	}()
 
 	project, version, build := "", "", ""
@@ -60,24 +62,19 @@ func Download(c *atreugo.RequestCtx) error {
 		}
 	}
 
-	bud, err := controller.FindBuildByProjectAndVersionAndNumber(project, version, unsafeConvert.StringToInt(build))
+	builds, err := controller.FindBuildByProjectAndVersionAndNumber(project, version, unsafeConvert.StringToInt(build))
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.JSONResponse(schemas.NewError("project or version or buildId is not found"), 400)
 		}
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 
-	budDL := bud.UnmarshalDownloads()
-	if budDL == nil {
-		budDL = map[string]schemas2.ApplicationVersionsSchema{}
-	}
-
-	defer utils.GC()
+	downloads := builds.UnmarshalDownloads()
 
 	mf, err := c.MultipartForm()
 	if err != nil {
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 	if mf.File == nil {
 		return c.JSONResponse(schemas.NewError("file not found"), 500)
@@ -87,23 +84,23 @@ func Download(c *atreugo.RequestCtx) error {
 	for name, o := range mf.File {
 		file := o[0]
 
-		if err = buildDownload(file, basicPath, name, budDL); err != nil {
-			return c.JSONResponse(schemas.NewError(err.Error()), 500)
+		if err = buildDownload(file, basicPath, name, downloads); err != nil {
+			return c.JSONResponse(schemas.NewErrors(err), 500)
 		}
 	}
 
-	if err = bud.MarshalDownloads(budDL); err != nil {
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+	if err = builds.MarshalDownloads(downloads); err != nil {
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 
-	if err = controller.CreateDownload(project, version, unsafeConvert.StringToInt(build), bud); err != nil {
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+	if err = controller.CreateDownload(project, version, unsafeConvert.StringToInt(build), builds); err != nil {
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 
 	return c.JSONResponse(schemas.NewResult("success"), 200)
 }
 
-func buildDownload(file *multipart.FileHeader, path, id string, budDL map[string]schemas2.ApplicationVersionsSchema) error {
+func buildDownload(file *multipart.FileHeader, path, id string, downloads map[string]schemas2.ApplicationVersionsSchema) error {
 	f, err := file.Open()
 	if err != nil {
 		return err
@@ -114,13 +111,13 @@ func buildDownload(file *multipart.FileHeader, path, id string, budDL map[string
 		return errors.New("file hash is empty")
 	}
 
-	if len(budDL) != 0 {
-		o, ok := budDL[id]
+	if len(downloads) != 0 {
+		o, ok := downloads[id]
 		if ok && o.Sha256 == fileHash {
 			return nil
 		}
 
-		for _, version := range budDL {
+		for _, version := range downloads {
 			if version.Sha256 == fileHash {
 				return nil
 			}
@@ -136,13 +133,12 @@ func buildDownload(file *multipart.FileHeader, path, id string, budDL map[string
 		return err
 	}
 	defer localFile.Close()
-	// _, err = utils.CopyZeroAlloc(localFile, f)
 	_, err = io.Copy(localFile, f)
 	if err != nil {
 		return err
 	}
 
-	budDL[id] = schemas2.ApplicationVersionsSchema{
+	downloads[id] = schemas2.ApplicationVersionsSchema{
 		Name:   file.Filename,
 		Sha256: fileHash,
 	}

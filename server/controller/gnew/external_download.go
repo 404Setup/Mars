@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"errors"
 	"net/url"
-	"time"
 
 	hash2 "github.com/3JoB/ulib/hash"
 	"github.com/3JoB/ulib/litefmt"
@@ -40,25 +39,22 @@ func ExternalDownload(c *atreugo.RequestCtx) error {
 		return c.JSONResponse(schemas.NewError("project or version or build is nil"), 400)
 	}
 
-	bud, err := controller.FindBuildByProjectAndVersionAndNumber(jar.Project, jar.Version, jar.Build)
+	builds, err := controller.FindBuildByProjectAndVersionAndNumber(jar.Project, jar.Version, jar.Build)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.JSONResponse(schemas.NewError("project or version or buildId is not found"), 400)
 		}
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 
-	budDL := bud.UnmarshalDownloads()
-	if budDL == nil {
-		budDL = map[string]schemas2.ApplicationVersionsSchema{}
-	}
+	downloads := builds.UnmarshalDownloads()
 
-	if len(jar.File) != 0 {
+	if len(jar.File) > 0 {
 		var e error
 		for a, b := range jar.File {
 			_, err = url.Parse(b.Url)
 			if err != nil {
-				e = errors.New(litefmt.Sprint(">> ", b.Url, " << not an effective URL"))
+				e = errors.New(litefmt.Sprint(">> ", b.Url, " not an effective URL"))
 				break
 			}
 			if configure.Get().ActiveSniffing && (b.Sha256 == "" && b.Name == "") {
@@ -76,21 +72,21 @@ func ExternalDownload(c *atreugo.RequestCtx) error {
 					Sha256: hashe,
 					Url:    b.Url,
 				}
-				buildDownloadUrl(a, r, budDL)
+				buildDownloadUrl(a, r, downloads)
 				continue
 			}
-			buildDownloadUrl(a, b, budDL)
+			buildDownloadUrl(a, b, downloads)
 		}
 		if e != nil {
-			return c.JSONResponse(schemas.NewError(e.Error()), 400)
+			return c.JSONResponse(schemas.NewErrors(e), 400)
 		}
 	}
-	if err = bud.MarshalDownloads(budDL); err != nil {
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+	if err = builds.MarshalDownloads(downloads); err != nil {
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 
-	if err = controller.CreateDownload(jar.Project, jar.Version, jar.Build, bud); err != nil {
-		return c.JSONResponse(schemas.NewError(err.Error()), 500)
+	if err = controller.CreateDownload(jar.Project, jar.Version, jar.Build, builds); err != nil {
+		return c.JSONResponse(schemas.NewErrors(err), 500)
 	}
 
 	return c.JSONResponse(schemas.NewResult("success"), 200)
@@ -115,7 +111,7 @@ func buildDownloadUrl(id string, d schemas2.ApplicationVersionsSchema, b map[str
 	}
 
 	b[id] = schemas2.ApplicationVersionsSchema{
-		Name:   uuid.GenerateUUIDv9(hash2.CreateHMAC(unsafeConvert.BytePointer(d.Url), unsafeConvert.BytePointer(time.Now().String()), md5.New).Hex()).String(),
+		Name:   uuid.GenerateUUIDv5(hash2.CreateHash(unsafeConvert.BytePointer(d.Url), md5.New()).Hex()).String(),
 		Sha256: "",
 		Url:    d.Url,
 	}

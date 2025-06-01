@@ -55,7 +55,7 @@ func Download(c *atreugo.RequestCtx) error {
 	}
 
 	downloads := build.UnmarshalDownloads()
-	if downloads == nil || len(downloads) == 0 {
+	if len(downloads) == 0 {
 		return helper.HandleError(c, "Download not found", 404)
 	}
 
